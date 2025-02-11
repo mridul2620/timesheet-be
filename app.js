@@ -15,12 +15,44 @@ const forgotPasswordRoutes = require('./routes/Password/forgot');
 const resetPasswordRoutes = require('./routes/Password/reset'); 
 const changePasswordRoutes = require('./routes/Password/changepassword');
 const editUserRoutes = require('./routes/User/editUser');
+const subjectRoutes = require('./routes/Subject/addSubject');
+const projectRoutes = require('./routes/Project/addProject');
+const getSubjects = require('./routes/Subject/getSubject');
+const getProjects = require('./routes/Project/getProject');
+const deleteSubjects = require('./routes/Subject/deleteSubjects');
+const deleteProjects = require('./routes/Project/deleteProjects');
+const addTimesheet = require('./routes/Timesheet/addTimesheet');
+const getTimesheet = require('./routes/Timesheet/getTimesheet');
 var cors = require('cors');
 
 
 const app = express();
 
-mongoose.connect(process.env.MONGODB_URI);
+mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => {
+    console.log('MongoDB Connected...');
+    console.log('Connection Details:', {
+        host: mongoose.connection.host,
+        port: mongoose.connection.port,
+        name: mongoose.connection.name
+    });
+})
+.catch(err => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+});
+
+// Add these event listeners
+mongoose.connection.on('error', err => {
+    console.error('MongoDB error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+    console.log('MongoDB disconnected');
+});
 
 app.set('view engine', 'ejs');
 
@@ -64,6 +96,14 @@ app.use(forgotPasswordRoutes);
 app.use(resetPasswordRoutes);
 app.use(changePasswordRoutes);
 app.use(editUserRoutes);
+app.use(subjectRoutes);
+app.use(projectRoutes);
+app.use(getSubjects);
+app.use(getProjects);
+app.use(deleteSubjects);
+app.use(deleteProjects);
+app.use(addTimesheet);
+app.use(getTimesheet);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
