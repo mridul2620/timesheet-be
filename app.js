@@ -23,29 +23,14 @@ const deleteSubjects = require('./routes/Subject/deleteSubjects');
 const deleteProjects = require('./routes/Project/deleteProjects');
 const addTimesheet = require('./routes/Timesheet/addTimesheet');
 const getTimesheet = require('./routes/Timesheet/getTimesheet');
+const deleteTimesheet = require('./routes/Timesheet/deleteTimesheet');
 var cors = require('cors');
 
 
 const app = express();
 
-mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => {
-    console.log('MongoDB Connected...');
-    console.log('Connection Details:', {
-        host: mongoose.connection.host,
-        port: mongoose.connection.port,
-        name: mongoose.connection.name
-    });
-})
-.catch(err => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
-});
+mongoose.connect(process.env.MONGODB_URI)
 
-// Add these event listeners
 mongoose.connection.on('error', err => {
     console.error('MongoDB error:', err);
 });
@@ -104,6 +89,7 @@ app.use(deleteSubjects);
 app.use(deleteProjects);
 app.use(addTimesheet);
 app.use(getTimesheet);
+app.use(deleteTimesheet);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
