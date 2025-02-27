@@ -29,7 +29,7 @@ var cors = require('cors');
 
 const app = express();
 
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect("mongodb+srv://aakanksh-chartsign:1234567890@cluster0.ka55ape.mongodb.net/chartsign")
 
 mongoose.connection.on('error', err => {
     console.error('MongoDB error:', err);
