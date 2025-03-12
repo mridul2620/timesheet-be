@@ -5,8 +5,8 @@ const TimesheetSchema = new mongoose.Schema({
     weekStartDate: { type: String, required: true },
     entries: { type: Array, required: true },
     workDescription: { type: String, required: true },
-    dayStatus: { type: Object, required: true }
+    dayStatus: { type: Object, required: true },
+    timesheetStatus: { type: String, default: "unapproved", enum: ["unapproved", "approved", "rejected"] }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Timesheet", TimesheetSchema);
-

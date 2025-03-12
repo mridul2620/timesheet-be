@@ -1,17 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const Timesheet = require("../../models/userTimesheet");
+const mongoose = require("mongoose");
 
+// Original POST route for submitting new timesheets
 router.post("/api/timesheet/submit", async (req, res) => {
     try {
-        // console.log("Received timesheet submission:", {
-        //     username: req.body.username,
-        //     weekStartDate: req.body.weekStartDate,
-        //     entriesCount: req.body.entries?.length,
-        //     hasDescription: !!req.body.workDescription,
-        //     hasDayStatus: !!req.body.dayStatus
-        // });
-
         const { username, weekStartDate, entries, workDescription, dayStatus } = req.body;
 
         if (!username || !weekStartDate || !entries) {
@@ -20,16 +14,30 @@ router.post("/api/timesheet/submit", async (req, res) => {
                 received: { username, weekStartDate, entriesCount: entries?.length }
             });
         }
+        
+        // Check if a timesheet already exists for this week to prevent duplicates
+        const existingTimesheet = await Timesheet.findOne({
+            username,
+            weekStartDate
+        });
+        
+        if (existingTimesheet) {
+            return res.status(409).json({
+                message: "A timesheet for this week already exists",
+                existingId: existingTimesheet._id
+            });
+        }
+        
         const timesheet = new Timesheet({
             username,
             weekStartDate,
             entries,
             workDescription,
-            dayStatus
+            dayStatus: dayStatus || {}, // Ensure dayStatus is saved, default to empty object
+            timesheetStatus: "unapproved"
         });
 
         const savedTimesheet = await timesheet.save();
-        const verification = await Timesheet.findById(savedTimesheet._id);
 
         res.status(201).json({ 
             message: "Timesheet submitted successfully",
@@ -45,6 +53,69 @@ router.post("/api/timesheet/submit", async (req, res) => {
         res.status(500).json({ 
             message: "Internal server error", 
             error: error.message 
+        });
+    }
+});
+
+router.put("/api/timesheet/update/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { username, entries, workDescription, dayStatus } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid timesheet ID format"
+            });
+        }
+
+        const timesheet = await Timesheet.findById(id);
+        
+        if (!timesheet) {
+            return res.status(404).json({
+                success: false,
+                message: "Timesheet not found"
+            });
+        }
+        
+        if (timesheet.username !== username) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to update this timesheet"
+            });
+        }
+
+        if (timesheet.timesheetStatus !== "rejected") {
+            return res.status(400).json({
+                success: false,
+                message: "Only rejected timesheets can be updated"
+            });
+        }
+        
+        const updatedTimesheet = await Timesheet.findByIdAndUpdate(
+            id,
+            {
+                entries,
+                workDescription,
+                dayStatus: dayStatus || {},
+                timesheetStatus: "unapproved",
+                updatedAt: new Date()
+            },
+            { new: true }
+        );
+        
+        res.status(200).json({
+            success: true,
+            message: "Timesheet updated successfully",
+            timesheet: updatedTimesheet
+        });
+        
+    } catch (error) {
+        console.error("Error updating timesheet:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
         });
     }
 });
