@@ -19,11 +19,14 @@ const subjectRoutes = require('./routes/Subject/addSubject');
 const projectRoutes = require('./routes/Project/addProject');
 const getSubjects = require('./routes/Subject/getSubject');
 const getProjects = require('./routes/Project/getProject');
+const updateProjects=require('./routes/Project/updateProject');
 const deleteSubjects = require('./routes/Subject/deleteSubjects');
+const updateSubjects=require('./routes/Subject/updateSubject');
 const deleteProjects = require('./routes/Project/deleteProjects');
 const addTimesheet = require('./routes/Timesheet/addTimesheet');
 const getTimesheet = require('./routes/Timesheet/getTimesheet');
 const deleteTimesheet = require('./routes/Timesheet/deleteTimesheet');
+const payroll = require('./routes/payroll');
 var cors = require('cors');
 
 
@@ -87,9 +90,12 @@ app.use(getSubjects);
 app.use(getProjects);
 app.use(deleteSubjects);
 app.use(deleteProjects);
+app.use(updateProjects);
+app.use(updateSubjects);
 app.use(addTimesheet);
 app.use(getTimesheet);
 app.use(deleteTimesheet);
+app.use(payroll);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

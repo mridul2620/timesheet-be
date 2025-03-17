@@ -30,4 +30,31 @@ router.delete('/api/deleteAllSubjects', async (req, res) => {
     }
 });
 
+// Delete a single subject by ID
+router.delete('/api/deleteSubject/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await Subject.findByIdAndDelete(id);
+        
+        if (!result) {
+            return res.status(404).json({
+                success: false,
+                message: "Subject not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Subject deleted successfully.",
+        });
+    } catch (error) {
+        console.error('Error deleting subject:', error);
+        res.status(500).json({
+            success: false,
+            message: "Error deleting subject",
+            error: error.message,
+        });
+    }
+});
+
 module.exports = router;
