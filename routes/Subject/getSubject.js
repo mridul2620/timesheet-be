@@ -5,10 +5,10 @@ const Subject = require('../../models/subject'); // Ensure correct path
 router.get('/api/getSubjects', async (req, res) => {
     try {
         const subjects = await Subject.find();
-        console.log("Fetched Subjects:", subjects); 
         const subjectList = subjects.map(subject => ({
             _id: subject._id,
             name: subject.name,
+            assignedTo: subject.assignedTo
           }));
       
           res.status(200).json({ subjects: subjectList });

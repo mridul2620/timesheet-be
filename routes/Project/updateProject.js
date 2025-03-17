@@ -5,9 +5,19 @@ const Project = require('../../models/project');
 router.put('/api/updateProject/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { name } = req.body;
+        const { name, assignedTo } = req.body;
 
-        const result = await Project.findByIdAndUpdate(id, { name }, { new: true });
+        const updateData = {};
+        
+        if (name) {
+            updateData.name = name;
+        }
+        
+        if (assignedTo) {
+            updateData.assignedTo = assignedTo;
+        }
+
+        const result = await Project.findByIdAndUpdate(id, updateData, { new: true });
         
         if (!result) {
             return res.status(404).json({

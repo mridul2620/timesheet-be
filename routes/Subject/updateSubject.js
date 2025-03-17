@@ -5,9 +5,21 @@ const Subject = require('../../models/subject');
 router.put('/api/updateSubject/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { name } = req.body;
+        const { name, assignedTo } = req.body;
 
-        const result = await Subject.findByIdAndUpdate(id, { name }, { new: true });
+        // Validate assignedTo is an array if provided
+        if (assignedTo && !Array.isArray(assignedTo)) {
+            return res.status(400).json({
+                success: false,
+                message: "assignedTo must be an array",
+            });
+        }
+
+        const result = await Subject.findByIdAndUpdate(
+            id,
+            { name, assignedTo },
+            { new: true, runValidators: true } // Ensure validation rules are enforced
+        );
         
         if (!result) {
             return res.status(404).json({
