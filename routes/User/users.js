@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../../models/user');
 
+// Get all users
 router.get('/api/users', async (req, res) => {
     try {
         const users = await User.find({}, 'username name email role designation payrate active');
@@ -14,6 +15,44 @@ router.get('/api/users', async (req, res) => {
         res.status(500).json({ 
             success: false, 
             message: 'Server error' 
+        });
+    }
+});
+
+// Get specific user by username
+router.get('/api/users/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        
+        if (!username) {
+            return res.status(400).json({
+                success: false,
+                message: 'Username parameter is required'
+            });
+        }
+        
+        const user = await User.findOne(
+            { username }, 
+            'username name email role designation payrate active'
+        );
+        
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            user: user
+        });
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Server error',
+            error: error.message
         });
     }
 });
