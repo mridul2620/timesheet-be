@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require('../../models/user');
 
 router.post('/api/edituser', async (req, res) => {
-    const { username, newUsername, email, name, payrate, designation, active } = req.body;
+    const { username, newUsername, email, name, payrate, designation, active, role } = req.body;
 
     if (!username) {
         return res.status(400).json({ success: false, message: 'Username is required' });
@@ -22,6 +22,7 @@ router.post('/api/edituser', async (req, res) => {
         if (payrate !== undefined) user.payrate = payrate;
         if (designation !== undefined) user.designation = designation;
         if (active !== undefined) user.active = active;
+        if (role !== undefined) user.role = role;
 
         await user.save();
         res.status(200).json({ success: true, message: 'User details updated successfully', user });
