@@ -48,7 +48,7 @@ router.post('/api/forgot', async (req, res) => {
         // Test the connection
         await transporter.verify();
 
-        const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${token}`;
+        const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
 
         const mailOptions = {
             from: `Chartsign PPR Team <${process.env.EMAIL_USER}>`,
