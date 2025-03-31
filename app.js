@@ -108,14 +108,6 @@ app.use(deleteTimesheet);
 app.use(payroll);
 app.use(mail);
 
-const keepAlive = new ServerKeepAlive({
-    url: process.env.APP_URL,
-    interval: parseInt(process.env.KEEP_ALIVE_INTERVAL) || 14 * 60 * 1000,
-    inactivityThreshold: parseInt(process.env.KEEP_ALIVE_THRESHOLD) || 15 * 60 * 1000
-  });
-
-  keepAlive.start();
-
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
