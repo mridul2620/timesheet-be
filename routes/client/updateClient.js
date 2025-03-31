@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const client = require('../../models/client');
+// Change this line - make sure the model name matches your usage
+const Client = require('../../models/client'); // Changed to uppercase Client
 
 router.put('/api/updateClient/:id', async (req, res) => {
     try {
