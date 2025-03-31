@@ -82,6 +82,9 @@ app.use((req, res, next) => {
     next();
 });
 
+const keepAlive = new ServerKeepAlive();
+keepAlive.start();
+
 app.use(loginRoutes);
 app.use(registerRoutes);
 app.use(userRoutes);
