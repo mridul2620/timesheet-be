@@ -3,15 +3,22 @@ const router = express.Router();
 const Timesheet = require("../../models/userTimesheet");
 const mongoose = require("mongoose");
 
-// Original POST route for submitting new timesheets
 router.post("/api/timesheet/submit", async (req, res) => {
     try {
         const { username, weekStartDate, entries, workDescription, dayStatus } = req.body;
 
+        // Check for all required fields
         if (!username || !weekStartDate || !entries) {
             return res.status(400).json({ 
                 message: "Missing required fields",
                 received: { username, weekStartDate, entriesCount: entries?.length }
+            });
+        }
+        
+        // Specifically check for work description
+        if (!workDescription || workDescription.trim() === '') {
+            return res.status(400).json({ 
+                message: "Please add a work description"
             });
         }
         
@@ -50,6 +57,13 @@ router.post("/api/timesheet/submit", async (req, res) => {
             stack: error.stack,
             name: error.name
         });
+        
+        if (error.name === 'ValidationError' && error.errors && error.errors.workDescription) {
+            return res.status(400).json({ 
+                message: "Please add a work description"
+            });
+        }
+        
         res.status(500).json({ 
             message: "Internal server error", 
             error: error.message 
@@ -66,6 +80,13 @@ router.put("/api/timesheet/update/:id", async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Invalid timesheet ID format"
+            });
+        }
+
+        if (!workDescription || workDescription.trim() === '') {
+            return res.status(400).json({
+                success: false,
+                message: "Please add a work description"
             });
         }
 
@@ -112,6 +133,13 @@ router.put("/api/timesheet/update/:id", async (req, res) => {
         
     } catch (error) {
         console.error("Error updating timesheet:", error);
+        if (error.name === 'ValidationError' && error.errors && error.errors.workDescription) {
+            return res.status(400).json({
+                success: false,
+                message: "Please add a work description"
+            });
+        }
+        
         res.status(500).json({
             success: false,
             message: "Internal server error",
