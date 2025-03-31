@@ -15,6 +15,10 @@ const forgotPasswordRoutes = require('./routes/Password/forgot');
 const resetPasswordRoutes = require('./routes/Password/reset'); 
 const changePasswordRoutes = require('./routes/Password/changepassword');
 const editUserRoutes = require('./routes/User/editUser');
+const clientRoutes = require('./routes/client/addClient');
+const getclients = require('./routes/client/getClient');
+const updateClients=require('./routes/client/updateClient');
+const deleteClients = require('./routes/client/deleteClient');
 const subjectRoutes = require('./routes/Subject/addSubject');
 const projectRoutes = require('./routes/Project/addProject');
 const getSubjects = require('./routes/Subject/getSubject');
@@ -28,6 +32,7 @@ const getTimesheet = require('./routes/Timesheet/getTimesheet');
 const deleteTimesheet = require('./routes/Timesheet/deleteTimesheet');
 const payroll = require('./routes/payroll');
 const mail = require('./routes/Mail/mail');
+const ServerKeepAlive = require('./serverKeepLive');
 var cors = require('cors');
 
 
@@ -85,6 +90,10 @@ app.use(forgotPasswordRoutes);
 app.use(resetPasswordRoutes);
 app.use(changePasswordRoutes);
 app.use(editUserRoutes);
+app.use(clientRoutes);
+app.use(getclients);
+app.use(deleteClients);
+app.use(updateClients);
 app.use(subjectRoutes);
 app.use(projectRoutes);
 app.use(getSubjects);
@@ -98,6 +107,14 @@ app.use(getTimesheet);
 app.use(deleteTimesheet);
 app.use(payroll);
 app.use(mail);
+
+const keepAlive = new ServerKeepAlive({
+    url: process.env.APP_URL,
+    interval: parseInt(process.env.KEEP_ALIVE_INTERVAL) || 14 * 60 * 1000,
+    inactivityThreshold: parseInt(process.env.KEEP_ALIVE_THRESHOLD) || 15 * 60 * 1000
+  });
+
+  keepAlive.start();
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
