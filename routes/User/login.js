@@ -11,20 +11,46 @@ router.post('/api/login', (req, res, next) => {
         req.logIn(user, async (err) => {
             if (err) return res.status(500).json({ success: false, message: 'Server error' });
             
-            const loggedInUser = await User.findById(user._id).select('username name email role designation payrate active');
-            res.status(200).json({
-                success: true,
-                message: 'Logged in successfully',
-                user: {
-                    name:loggedInUser.name,
-                    username: loggedInUser.username,
-                    email: loggedInUser.email,
-                    role: loggedInUser.role,
-                    designation: loggedInUser.designation,
-                    payrate: loggedInUser.payrate ? parseFloat(loggedInUser.payrate.toString()).toFixed(2) : null,
-                    active:loggedInUser.active
-                }
-            });
+            try {
+                const loggedInUser = await User.findById(user._id)
+                    .select('username name email role designation active allocatedHours financialYears')
+                    .lean();
+
+                const allocatedHours = loggedInUser.allocatedHours || [];
+                
+                // Ensure all allocatedHours entries have the correct format
+                const formattedAllocatedHours = allocatedHours.map(item => ({
+                    year: item.year,
+                    hours: item.hours
+                }));
+                
+                // // Ensure financialYears is an array even if it's undefined or null
+                // const financialYears = loggedInUser.financialYears || [];
+                
+                // Format the response
+                res.status(200).json({
+                    success: true,
+                    message: 'Logged in successfully',
+                    user: {
+                        name: loggedInUser.name,
+                        username: loggedInUser.username,
+                        email: loggedInUser.email,
+                        role: loggedInUser.role,
+                        designation: loggedInUser.designation,
+                        // payrate: loggedInUser.payrate ? parseFloat(loggedInUser.payrate.toString()).toFixed(2) : null,
+                        active: loggedInUser.active,
+                        allocatedHours: formattedAllocatedHours,
+                        // financialYears: financialYears
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Error retrieving user data',
+                    error: error.message
+                });
+            }
         });
     })(req, res, next);
 });

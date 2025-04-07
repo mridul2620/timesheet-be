@@ -2,10 +2,9 @@ const express = require('express');
 const router = express.Router();
 const User = require('../../models/user');
 
-// Get all users
 router.get('/api/users', async (req, res) => {
     try {
-        const users = await User.find({}, 'username name email role designation payrate active');
+        const users = await User.find({}, 'username name email role designation payrate active allocatedHours financialYears');
         
         res.status(200).json({
             success: true,
@@ -19,7 +18,6 @@ router.get('/api/users', async (req, res) => {
     }
 });
 
-// Get specific user by username
 router.get('/api/users/:username', async (req, res) => {
     try {
         const { username } = req.params;
@@ -33,7 +31,7 @@ router.get('/api/users/:username', async (req, res) => {
         
         const user = await User.findOne(
             { username }, 
-            'username name email role designation payrate active'
+            'username name email role designation payrate active allocatedHours financialYears'
         );
         
         if (!user) {

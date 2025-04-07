@@ -34,8 +34,11 @@ router.post("/api/draft/save", async (req, res) => {
                 draftTimesheet.entries.push(entry);
             }
             
-            // Update other fields if provided
-            if (workDescription) draftTimesheet.workDescription = workDescription;
+            // Always update workDescription, even if it's an empty string
+            // This is the key change - always update the description
+            draftTimesheet.workDescription = workDescription !== undefined ? workDescription : draftTimesheet.workDescription;
+            
+            // Update dayStatus if provided
             if (dayStatus) draftTimesheet.dayStatus = dayStatus;
             
             draftTimesheet.lastUpdated = new Date();
@@ -52,7 +55,7 @@ router.post("/api/draft/save", async (req, res) => {
                 username,
                 weekStartDate,
                 entries: [entry],
-                workDescription: workDescription || "Draft",
+                workDescription: workDescription !== undefined ? workDescription : "Draft",
                 dayStatus: dayStatus || {},
                 lastUpdated: new Date()
             });
