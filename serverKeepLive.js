@@ -4,7 +4,7 @@ const http = require('http');
 
 class ServerKeepAlive {
   constructor(options = {}) {
-    this.url = options.url || process.env.APP_URL || 'https://your-app-url.onrender.com';
+    this.url = process.env.APP_URL;
     this.interval = options.interval || 14 * 60 * 1000; // 14 minutes (just under 15)
     this.inactivityThreshold = options.inactivityThreshold || 15 * 60 * 1000; // 15 minutes
     this.isRunning = false;
