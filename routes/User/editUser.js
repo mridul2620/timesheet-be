@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const User = require('../../models/user');
 
-// Update the server-side API handler to handle selective updates better
 router.post('/api/edituser', async (req, res) => {
     const { 
         username, 
@@ -14,7 +13,8 @@ router.post('/api/edituser', async (req, res) => {
         active, 
         role, 
         allocatedHours,
-        financialYears 
+        financialYears,
+        remainingHours 
     } = req.body;
 
     if (!username) {
@@ -28,7 +28,6 @@ router.post('/api/edituser', async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        // Update basic fields conditionally
         if (newUsername !== undefined) user.username = newUsername;
         if (email !== undefined) user.email = email;
         if (name !== undefined) user.name = name;
@@ -36,32 +35,23 @@ router.post('/api/edituser', async (req, res) => {
         if (designation !== undefined) user.designation = designation;
         if (active !== undefined) user.active = active;
         if (role !== undefined) user.role = role;
-        
-        // Handle selective allocatedHours updates
+        if (remainingHours !== undefined) user.remainingHours = remainingHours;
         if (allocatedHours !== undefined) {
-            // Ensure allocatedHours is an array
             const newAllocatedHours = Array.isArray(allocatedHours) 
                 ? allocatedHours 
                 : [allocatedHours];
-                
-            // If user doesn't have allocatedHours yet, create the array
             if (!user.allocatedHours) {
                 user.allocatedHours = [];
             }
-            
-            // Update only the specified years without touching other years
             newAllocatedHours.forEach(newHourEntry => {
-                // Only process entries with actual hours specified
                 if (newHourEntry.year && newHourEntry.hours && newHourEntry.hours.trim() !== '') {
                     const existingEntryIndex = user.allocatedHours.findIndex(
                         entry => entry.year === newHourEntry.year
                     );
                     
                     if (existingEntryIndex >= 0) {
-                        // Update existing entry
                         user.allocatedHours[existingEntryIndex].hours = newHourEntry.hours;
                     } else {
-                        // Add new entry
                         user.allocatedHours.push({
                             year: newHourEntry.year,
                             hours: newHourEntry.hours
@@ -70,19 +60,12 @@ router.post('/api/edituser', async (req, res) => {
                 }
             });
         }
-
-        // Update financial years only if provided
         if (financialYears !== undefined) {
-            // Ensure financialYears is an array
             const newFinancialYears = Array.isArray(financialYears) 
                 ? financialYears 
                 : [financialYears];
-                
-            // Process only the provided financial years
             newFinancialYears.forEach(newYear => {
                 if (!newYear.year) return;
-                
-                // If user doesn't have financialYears yet, create the array
                 if (!user.financialYears) {
                     user.financialYears = [];
                 }
@@ -92,13 +75,11 @@ router.post('/api/edituser', async (req, res) => {
                 );
                 
                 if (existingYearIndex >= 0) {
-                    // Update existing entry
                     user.financialYears[existingYearIndex] = {
                         ...user.financialYears[existingYearIndex],
                         ...newYear
                     };
                 } else {
-                    // Add new entry
                     user.financialYears.push(newYear);
                 }
             });

@@ -13,21 +13,15 @@ router.post('/api/login', (req, res, next) => {
             
             try {
                 const loggedInUser = await User.findById(user._id)
-                    .select('username name email role designation active allocatedHours financialYears')
+                    .select('username name email role designation active allocatedHours financialYears remainingHours')
                     .lean();
 
                 const allocatedHours = loggedInUser.allocatedHours || [];
-                
-                // Ensure all allocatedHours entries have the correct format
                 const formattedAllocatedHours = allocatedHours.map(item => ({
                     year: item.year,
                     hours: item.hours
                 }));
-                
-                // // Ensure financialYears is an array even if it's undefined or null
-                // const financialYears = loggedInUser.financialYears || [];
-                
-                // Format the response
+       
                 res.status(200).json({
                     success: true,
                     message: 'Logged in successfully',
@@ -40,6 +34,7 @@ router.post('/api/login', (req, res, next) => {
                         // payrate: loggedInUser.payrate ? parseFloat(loggedInUser.payrate.toString()).toFixed(2) : null,
                         active: loggedInUser.active,
                         allocatedHours: formattedAllocatedHours,
+                        remainingHours: loggedInUser.remainingHours
                         // financialYears: financialYears
                     }
                 });

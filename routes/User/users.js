@@ -4,7 +4,7 @@ const User = require('../../models/user');
 
 router.get('/api/users', async (req, res) => {
     try {
-        const users = await User.find({}, 'username name email role designation payrate active allocatedHours financialYears');
+        const users = await User.find({}, 'username name email role designation payrate active allocatedHours financialYears remainingHours');
         
         res.status(200).json({
             success: true,
@@ -31,7 +31,7 @@ router.get('/api/users/:username', async (req, res) => {
         
         const user = await User.findOne(
             { username }, 
-            'username name email role designation payrate active allocatedHours financialYears'
+            'username name email role designation payrate active allocatedHours financialYears remainingHours'
         );
         
         if (!user) {
