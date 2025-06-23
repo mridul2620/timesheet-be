@@ -14,7 +14,8 @@ router.post('/api/sendTimesheetEmail', async (req, res) => {
         startDate, 
         endDate, 
         timesheetData,
-        adminName
+        adminName,
+        rejectionReason
       } = req.body;
   
       // Validate required fields
@@ -91,11 +92,25 @@ router.post('/api/sendTimesheetEmail', async (req, res) => {
       // Email subject
       const subject = `Timesheet ${status === 'approved' ? 'Approved' : 'Rejected'}`;
   
+      // Create rejection reason section if timesheet is rejected
+      let rejectionReasonHtml = '';
+      if (status === 'rejected' && rejectionReason) {
+        rejectionReasonHtml = `
+          <div style="margin: 20px 0; padding: 15px; border-left: 4px solid #ef4444; background-color: #fef2f2; border-radius: 5px;">
+            <h3 style="color: #dc2626; margin: 0 0 10px 0; font-size: 16px;">Rejection Reason:</h3>
+            <p style="color: #7f1d1d; margin: 0; line-height: 1.5; white-space: pre-wrap;">${rejectionReason}</p>
+          </div>
+        `;
+      }
+
       // Email body
       const htmlBody = `
         <div style="font-family: Arial, sans-serif; color: #000;">
           <p>Hi ${userName},</p>
           <p>Your timesheet for the period <strong>${formattedStartDate} - ${formattedEndDate}</strong> has been <strong>${status}</strong> by the admin.</p>
+          
+          ${rejectionReasonHtml}
+          
           <p>Please see the details below:</p>
           
           ${tableHtml}

@@ -39,7 +39,7 @@ router.get("/api/timesheet/:username", async (req, res) => {
 router.post("/api/timesheet/:username/status", async (req, res) => {
     try {
         const { username } = req.params;
-        const { timesheetId, status } = req.body;
+        const { timesheetId, status, rejectionReason } = req.body;
 
         if (!timesheetId || !status) {
             return res.status(400).json({
@@ -55,9 +55,31 @@ router.post("/api/timesheet/:username/status", async (req, res) => {
             });
         }
 
+        // If status is rejected, require rejection reason
+        if (status === "rejected" && (!rejectionReason || !rejectionReason.trim())) {
+            return res.status(400).json({
+                success: false,
+                message: "Rejection reason is required when rejecting a timesheet"
+            });
+        }
+
+        // Prepare update object
+        const updateData = { 
+            timesheetStatus: status,
+            statusUpdatedAt: new Date()
+        };
+
+        // Add rejection reason if status is rejected
+        if (status === "rejected") {
+            updateData.rejectionReason = rejectionReason.trim();
+        } else {
+            // Clear rejection reason if status is not rejected
+            updateData.$unset = { rejectionReason: "" };
+        }
+
         const timesheet = await Timesheet.findOneAndUpdate(
             { _id: timesheetId, username },
-            { $set: { timesheetStatus: status } },
+            updateData,
             { new: true }
         );
 
