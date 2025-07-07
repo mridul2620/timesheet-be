@@ -44,7 +44,7 @@ var cors = require('cors');
 
 const app = express();
 
-mongoose.connect(process.env.MONGODB_URI_OLD)
+mongoose.connect(process.env.MONGODB_URI)
 
 mongoose.connection.on('error', err => {
     console.error('MongoDB error:', err);
