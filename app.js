@@ -34,12 +34,17 @@ const payroll = require('./routes/payroll');
 const mail = require('./routes/Mail/mail');
 const ServerKeepAlive = require('./serverKeepLive');
 const draftTimesheet = require('./routes/Draft Timesheet/draft');
+const addHoliday=require('./routes/Holiday/addHoliday');
+const updateHoliday=require('./routes/Holiday/updateHoliday');
+const deleteHoliday=require('./routes/Holiday/deleteHoliday');
+const getHoliday=require('./routes/Holiday/getHoliday');
+const holidayMail = require('./routes/Mail/holidayMail');
 var cors = require('cors');
 
 
 const app = express();
 
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(process.env.MONGODB_URI_OLD)
 
 mongoose.connection.on('error', err => {
     console.error('MongoDB error:', err);
@@ -112,6 +117,11 @@ app.use(deleteTimesheet);
 app.use(payroll);
 app.use(mail);
 app.use(draftTimesheet);
+app.use(addHoliday);
+app.use(deleteHoliday);
+app.use(updateHoliday);
+app.use(getHoliday);
+app.use(holidayMail);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
