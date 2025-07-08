@@ -4,7 +4,7 @@ const router = express.Router();
 
 router.post('/api/sendUserStatusEmail', async (req, res) => {
     try {
-        console.log("User status email request received:", req.body);
+        // console.log("User status email request received:", req.body);
         
         const { 
             userEmail, 
@@ -45,7 +45,7 @@ router.post('/api/sendUserStatusEmail', async (req, res) => {
             });
         }
 
-        console.log("Preparing to send status update email to user:", userEmail);
+        // console.log("Preparing to send status update email to user:", userEmail);
 
         // Create nodemailer transporter
         const transporter = nodemailer.createTransport({
@@ -61,7 +61,7 @@ router.post('/api/sendUserStatusEmail', async (req, res) => {
         // Test the connection
         try {
             await transporter.verify();
-            console.log("SMTP connection verified successfully");
+            // console.log("SMTP connection verified successfully");
         } catch (smtpError) {
             console.error("SMTP verification failed:", smtpError);
             return res.status(500).json({ 
@@ -240,7 +240,7 @@ router.post('/api/sendUserStatusEmail', async (req, res) => {
             </div>
         `;
 
-        console.log("Prepared user status email with subject:", subject);
+        // console.log("Prepared user status email with subject:", subject);
 
         // Send email to user
         try {
@@ -251,7 +251,7 @@ router.post('/api/sendUserStatusEmail', async (req, res) => {
                 html: htmlBody,
             });
             
-            console.log("User status email sent successfully:", info.messageId);
+            // console.log("User status email sent successfully:", info.messageId);
             return res.status(200).json({ 
                 success: true, 
                 message: `User status notification email sent successfully (${status})`,

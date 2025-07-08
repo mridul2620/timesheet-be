@@ -4,7 +4,7 @@ const router = express.Router();
 
 router.post('/api/sendHolidayEmail', async (req, res) => {
     try {
-      console.log("Holiday email request received:", req.body);
+      // console.log("Holiday email request received:", req.body);
       
       const { 
         userEmail, 
@@ -58,11 +58,11 @@ router.post('/api/sendHolidayEmail', async (req, res) => {
         });
       }
 
-      console.log("Preparing to send holiday email to admin:", process.env.HOLIDAY_MAIL);
-      console.log("Email credentials:", { 
-        user: process.env.EMAIL_USER ? 'Set' : 'Missing',
-        pass: process.env.EMAIL_PASS ? 'Set' : 'Missing'
-      });
+      // console.log("Preparing to send holiday email to admin:", process.env.HOLIDAY_MAIL);
+      // console.log("Email credentials:", { 
+      //   user: process.env.EMAIL_USER ? 'Set' : 'Missing',
+      //   pass: process.env.EMAIL_PASS ? 'Set' : 'Missing'
+      // });
   
       // Create nodemailer transporter
       const transporter = nodemailer.createTransport({
@@ -78,7 +78,7 @@ router.post('/api/sendHolidayEmail', async (req, res) => {
       // Test the connection
       try {
         await transporter.verify();
-        console.log("SMTP connection verified successfully");
+        // console.log("SMTP connection verified successfully");
       } catch (smtpError) {
         console.error("SMTP verification failed:", smtpError);
         return res.status(500).json({ 
@@ -231,7 +231,7 @@ router.post('/api/sendHolidayEmail', async (req, res) => {
         </div>
       `;
       
-      console.log("Prepared holiday email with subject:", subject);
+      // console.log("Prepared holiday email with subject:", subject);
       
       // Send email to admin
       try {
@@ -242,7 +242,7 @@ router.post('/api/sendHolidayEmail', async (req, res) => {
           html: htmlBody,
         });
         
-        console.log("Holiday email sent successfully to admin:", info.messageId);
+        // console.log("Holiday email sent successfully to admin:", info.messageId);
         return res.status(200).json({ 
           success: true, 
           message: 'Holiday notification email sent to admin successfully',
