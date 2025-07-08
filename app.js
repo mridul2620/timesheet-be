@@ -39,6 +39,7 @@ const updateHoliday=require('./routes/Holiday/updateHoliday');
 const deleteHoliday=require('./routes/Holiday/deleteHoliday');
 const getHoliday=require('./routes/Holiday/getHoliday');
 const holidayMail = require('./routes/Mail/holidayMail');
+const approvalMail = require('./routes/Mail/approvalMail');
 var cors = require('cors');
 
 
@@ -122,6 +123,7 @@ app.use(deleteHoliday);
 app.use(updateHoliday);
 app.use(getHoliday);
 app.use(holidayMail);
+app.use(approvalMail);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

@@ -8,7 +8,8 @@ const HolidaySchema = new mongoose.Schema({
     to: { type: Date, required: true },
     reason: { type: String, required: true },
     workingDays: { type: Number, required: true, min: 1 },
-    status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" }
+    status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+    rejectionReason: { type: String, default: null }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Holiday", HolidaySchema);

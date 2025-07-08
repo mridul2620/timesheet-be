@@ -1,13 +1,12 @@
-
 const express = require("express");
 const router = express.Router();
 const Holiday = require("../../models/holiday");
 
-// Update holiday status (existing endpoint)
+// Update holiday status (enhanced endpoint with rejection reason and email notification)
 router.put("/api/holiday/:id/status", async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        const { status, rejectionReason } = req.body;
 
         const validStatuses = ["pending", "approved", "rejected"];
         if (!status || !validStatuses.includes(status)) {
@@ -17,22 +16,71 @@ router.put("/api/holiday/:id/status", async (req, res) => {
             });
         }
 
-        const updatedHoliday = await Holiday.findByIdAndUpdate(
-            id,
-            { status },
-            { new: true, runValidators: true }
-        );
+        // If status is rejected, rejection reason is required
+        if (status === "rejected" && (!rejectionReason || rejectionReason.trim() === "")) {
+            return res.status(400).json({
+                success: false,
+                message: "Rejection reason is required when rejecting a request"
+            });
+        }
 
-        if (!updatedHoliday) {
+        // Find the holiday request first to get user details for email
+        const existingHoliday = await Holiday.findById(id);
+        if (!existingHoliday) {
             return res.status(404).json({
                 success: false,
                 message: "Holiday request not found"
             });
         }
 
+        // Prepare update data
+        const updateData = { status };
+        if (status === "rejected") {
+            updateData.rejectionReason = rejectionReason.trim();
+        } else {
+            // Clear rejection reason if status is not rejected
+            updateData.rejectionReason = null;
+        }
+
+        const updatedHoliday = await Holiday.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true, runValidators: true }
+        );
+
+        // Send email notification to user
+        try {
+            const emailResponse = await fetch(process.env.HOLIDAY_USER_MAIL_API || 'http://localhost:3000/api/sendUserStatusEmail', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userEmail: updatedHoliday.email,
+                    userName: updatedHoliday.username,
+                    leaveType: updatedHoliday.leaveType,
+                    fromDate: updatedHoliday.from.toISOString().split('T')[0],
+                    toDate: updatedHoliday.to.toISOString().split('T')[0],
+                    workingDays: updatedHoliday.workingDays,
+                    reason: updatedHoliday.reason,
+                    status: updatedHoliday.status,
+                    rejectionReason: updatedHoliday.rejectionReason
+                })
+            });
+
+            if (emailResponse.ok) {
+                console.log("User notification email sent successfully");
+            } else {
+                console.error("Failed to send user notification email");
+            }
+        } catch (emailError) {
+            console.error("Error sending user notification email:", emailError);
+            // Don't fail the main request if email fails
+        }
+
         res.status(200).json({
             success: true,
-            message: `Holiday request status updated to ${status}`,
+            message: `Holiday request status updated to ${status}${status === 'rejected' ? ' with reason provided' : ''}`,
             data: updatedHoliday
         });
 
@@ -46,7 +94,7 @@ router.put("/api/holiday/:id/status", async (req, res) => {
     }
 });
 
-// Update entire holiday request (new endpoint)
+// Update entire holiday request (existing endpoint - no changes needed)
 router.put("/api/holiday/:id", async (req, res) => {
     try {
         const { id } = req.params;
@@ -122,7 +170,9 @@ router.put("/api/holiday/:id", async (req, res) => {
             reason: reason.trim(),
             workingDays: workingDays || existingHoliday.workingDays,
             // Reset status to pending if it was rejected and now being edited
-            status: existingHoliday.status === 'rejected' ? 'pending' : existingHoliday.status
+            status: existingHoliday.status === 'rejected' ? 'pending' : existingHoliday.status,
+            // Clear rejection reason when editing
+            rejectionReason: null
         };
 
         const updatedHoliday = await Holiday.findByIdAndUpdate(
