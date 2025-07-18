@@ -44,7 +44,7 @@ router.post('/api/sendTimesheetEmail', async (req, res) => {
       });
   
       // Create nodemailer transporter
-      const transporter = nodemailer.createTransport({
+      const transporter = nodemailer.createTransporter({
         service: 'gmail',
         auth: {
           user: process.env.EMAIL_USER,
@@ -155,7 +155,30 @@ router.post('/api/sendTimesheetEmail', async (req, res) => {
     }
 });
 
-// Helper function to generate timesheet HTML table
+// Fixed helper function to generate Monday-Sunday week dates
+function getWeekDatesFromRange(startDate, endDate) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  // Calculate the Monday of the week that contains the start date
+  const startDay = start.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const daysToMonday = startDay === 0 ? 6 : startDay - 1;
+  
+  const monday = new Date(start);
+  monday.setDate(start.getDate() - daysToMonday);
+  
+  // Generate array of 7 dates starting from Monday
+  const weekDates = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + i);
+    weekDates.push(date);
+  }
+  
+  return weekDates;
+}
+
+// Helper function to generate timesheet HTML table with Monday-Sunday layout
 function generateTimesheetTable(data) {
   try {
     const { entries, weekDates, dayStatus, workDescription } = data;
@@ -165,12 +188,18 @@ function generateTimesheetTable(data) {
       return "<p>Error: Incomplete timesheet data</p>";
     }
     
-    // Ensure weekDates are proper Date objects
-    const formattedDates = weekDates.map(date => {
-      // Handle both Date objects and ISO strings
-      return typeof date === 'string' ? new Date(date) : date;
-    });
+    // Convert weekDates to proper Date objects and ensure Monday-Sunday order
+    let formattedDates;
+    if (weekDates.length > 0) {
+      // Use the provided weekDates but reorder them to ensure Monday-Sunday
+      const firstDate = new Date(weekDates[0]);
+      formattedDates = getWeekDatesFromRange(firstDate, firstDate);
+    } else {
+      console.error("No week dates provided");
+      return "<p>Error: No week dates available</p>";
+    }
     
+    // Format days for display - Monday to Sunday
     const days = formattedDates.map(date => moment(date).format('ddd, MMM D'));
     
     // Create table headers
@@ -196,8 +225,9 @@ function generateTimesheetTable(data) {
           <td style="padding: 10px; border: 1px solid #ddd;">${entry.project || 'N/A'}</td>
           <td style="padding: 10px; border: 1px solid #ddd;">${entry.subject || 'N/A'}</td>
           ${formattedDates.map(date => {
-            const dayStr = new Date(date).toISOString().split('T')[0];
-            return `<td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${entry.hours && entry.hours[dayStr] || ''}</td>`;
+            const dayStr = date.toISOString().split('T')[0];
+            const hours = entry.hours && entry.hours[dayStr] ? entry.hours[dayStr] : '';
+            return `<td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${hours}</td>`;
           }).join('')}
           <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${rowTotal.toFixed(2)}</td>
         </tr>
@@ -222,8 +252,9 @@ function generateTimesheetTable(data) {
         <tr>
           <td colspan="2" style="padding: 10px; border: 1px solid #ddd;">Status</td>
           ${formattedDates.map(date => {
-            const dayStr = new Date(date).toISOString().split('T')[0];
-            return `<td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${dayStatus[dayStr] || ''}</td>`;
+            const dayStr = date.toISOString().split('T')[0];
+            const status = dayStatus[dayStr] || '';
+            return `<td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${status}</td>`;
           }).join('')}
           <td style="padding: 10px; border: 1px solid #ddd;"></td>
         </tr>
@@ -240,7 +271,7 @@ function generateTimesheetTable(data) {
       tableHtml += `
         <div style="margin-top: 20px;">
           <h3 style="color: #333; margin-bottom: 10px;">Work Description</h3>
-          <div style="padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
+          <div style="padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; white-space: pre-wrap; line-height: 1.5;">
             ${workDescription.replace(/\n/g, '<br>')}
           </div>
         </div>
@@ -269,7 +300,7 @@ function calculateRowTotal(entry) {
 
 function calculateDayTotal(entries, date) {
   try {
-    const dayStr = new Date(date).toISOString().split('T')[0];
+    const dayStr = date.toISOString().split('T')[0];
     return entries.reduce((total, entry) => {
       if (!entry.hours) return total;
       const hours = Number.parseFloat(entry.hours[dayStr] || '0');
