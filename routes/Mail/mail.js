@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post('/api/sendTimesheetEmail', async (req, res) => {
     try {
-      console.log("Email request received:", req.body);
+      //console.log("Email request received:", req.body);
       
       const { 
         userEmail, 
@@ -37,11 +37,11 @@ router.post('/api/sendTimesheetEmail', async (req, res) => {
         });
       }
 
-      console.log("Preparing to send email to:", userEmail);
-      console.log("Email credentials:", { 
-        user: process.env.EMAIL_USER ? 'Set' : 'Missing',
-        pass: process.env.EMAIL_PASS ? 'Set' : 'Missing'
-      });
+      // console.log("Preparing to send email to:", userEmail);
+      // console.log("Email credentials:", { 
+      //   user: process.env.EMAIL_USER ? 'Set' : 'Missing',
+      //   pass: process.env.EMAIL_PASS ? 'Set' : 'Missing'
+      // });
   
       // Create nodemailer transporter
       const transporter = nodemailer.createTransporter({
@@ -57,7 +57,7 @@ router.post('/api/sendTimesheetEmail', async (req, res) => {
       // Test the connection
       try {
         await transporter.verify();
-        console.log("SMTP connection verified successfully");
+        //console.log("SMTP connection verified successfully");
       } catch (smtpError) {
         console.error("SMTP verification failed:", smtpError);
         return res.status(500).json({ 
@@ -120,7 +120,7 @@ router.post('/api/sendTimesheetEmail', async (req, res) => {
         </div>
       `;
       
-      console.log("Prepared email with subject:", subject);
+     // console.log("Prepared email with subject:", subject);
       
       // Send email
       try {
@@ -131,7 +131,7 @@ router.post('/api/sendTimesheetEmail', async (req, res) => {
           html: htmlBody,
         });
         
-        console.log("Email sent successfully:", info.messageId);
+       // console.log("Email sent successfully:", info.messageId);
         return res.status(200).json({ 
           success: true, 
           message: 'Email sent successfully',

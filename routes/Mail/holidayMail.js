@@ -71,8 +71,6 @@ router.post('/api/sendHolidayEmail', async (req, res) => {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASS,
         },
-        debug: true, // Enable debugging
-        logger: true // Log to console
       });
       
       // Test the connection
@@ -206,9 +204,27 @@ router.post('/api/sendHolidayEmail', async (req, res) => {
             </div>
             
             <!-- Action Required -->
-            <div style="background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%); padding: 20px; border-radius: 8px; text-align: center; border: 2px solid #f59e0b;">
+            <div style="background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%); padding: 20px; border-radius: 8px; text-align: center; border: 2px solid #f59e0b; margin-bottom: 20px;">
               <h3 style="margin: 0 0 10px 0; color: #92400e; font-size: 18px;">⚡ Action Required</h3>
-              <p style="margin: 0; color: #92400e; font-weight: 500;">Please review and approve/reject leave request in the admin panel.</p>
+              <p style="margin: 0 0 15px 0; color: #92400e; font-weight: 500;">Please review and approve/reject this leave request in the admin panel.</p>
+              
+              <!-- Action Button -->
+              <a href="https://chartsignppr.vercel.app/approvals" 
+                 style="display: inline-block; background: linear-gradient(135deg, #0c1e35 0%, #1e3a8a 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 25px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(12, 30, 53, 0.3); transition: all 0.3s ease;"
+                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(12, 30, 53, 0.4)';"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(12, 30, 53, 0.3)';">
+                🔗 Click here to view the request
+              </a>
+              
+              
+              <div style="margin-top: 15px;">
+                <p style="margin: 0; color: #92400e; font-size: 14px;">
+                  If the button above doesn't work, copy and paste this link:<br>
+                  <a href="https://chartsignppr.vercel.app/approvals" style="color: #0c1e35; font-weight: 600;">
+                    https://chartsignppr.vercel.app/approvals
+                  </a>
+                </p>
+              </div>
             </div>
             
             <!-- Footer -->

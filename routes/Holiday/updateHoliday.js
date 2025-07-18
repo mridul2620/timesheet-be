@@ -69,7 +69,7 @@ router.put("/api/holiday/:id/status", async (req, res) => {
             });
 
             if (emailResponse.ok) {
-                console.log("User notification email sent successfully");
+                //console.log("User notification email sent successfully");
             } else {
                 console.error("Failed to send user notification email");
             }
