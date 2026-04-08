@@ -23,22 +23,19 @@ router.post("/api/draft/save", async (req, res) => {
         });
 
         if (draftTimesheet) {
-            // Check if entry with same ID exists
+
             const entryIndex = draftTimesheet.entries.findIndex(e => e.id === entry.id);
             
             if (entryIndex >= 0) {
-                // Update existing entry
+
                 draftTimesheet.entries[entryIndex] = entry;
             } else {
-                // Add new entry
+
                 draftTimesheet.entries.push(entry);
             }
-            
-            // Always update workDescription, even if it's an empty string
-            // This is the key change - always update the description
+
             draftTimesheet.workDescription = workDescription !== undefined ? workDescription : draftTimesheet.workDescription;
             
-            // Update dayStatus if provided
             if (dayStatus) draftTimesheet.dayStatus = dayStatus;
             
             draftTimesheet.lastUpdated = new Date();
@@ -50,7 +47,6 @@ router.post("/api/draft/save", async (req, res) => {
                 draftId: draftTimesheet._id.toString()
             });
         } else {
-            // Create new draft
             const newDraft = new DraftTimesheet({
                 username,
                 weekStartDate,
@@ -78,7 +74,6 @@ router.post("/api/draft/save", async (req, res) => {
     }
 });
 
-// Delete a draft entry
 router.delete("/api/draft/entry", async (req, res) => {
     try {
         const { username, weekStartDate, entryId } = req.body;
@@ -130,7 +125,6 @@ router.delete("/api/draft/entry", async (req, res) => {
     }
 });
 
-// Get all draft entries for a week
 router.get("/api/draft/:username", async (req, res) => {
     try {
         const { username } = req.params;
@@ -169,7 +163,6 @@ router.get("/api/draft/:username", async (req, res) => {
     }
 });
 
-// Submit draft to final timesheet
 router.post("/api/draft/submit/:draftId", async (req, res) => {
     try {
         const { draftId } = req.params;
@@ -198,11 +191,6 @@ router.post("/api/draft/submit/:draftId", async (req, res) => {
             });
         }
         
-        // Forward the draft data to the main timesheet API
-        // This would be a call to your existing submitTimesheet endpoint
-        // Implement the logic to convert draft to final timesheet
-        
-        // After successful submission, delete the draft
         await DraftTimesheet.findByIdAndDelete(draftId);
         
         return res.status(200).json({

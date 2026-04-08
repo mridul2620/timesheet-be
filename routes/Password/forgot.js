@@ -4,9 +4,6 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const User = require('../../models/user');
 
-// Make sure your server has body-parser middleware configured
-// app.use(express.json()); // This should be in your main server file
-
 router.post('/api/forgot', async (req, res) => {
     try {
         const { identifier } = req.body;
@@ -36,23 +33,38 @@ router.post('/api/forgot', async (req, res) => {
 
         await user.save();
 
-        // Configure transporter with error handling
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
-        });
+        const emailUser = (process.env.EMAIL_USER || '').trim();
+        // App password is often copied with spaces; strip them safely.
+        const emailPass = (
+            process.env.EMAIL_PASS ||
+            process.env.EMAIL_PASSWORD_ADMIN_CHARTSIGN ||
+            process.env.EMAIL_PASSWORD_CLAIRE_CHARTSIGN ||
+            ''
+        ).replace(/\s+/g, '');
 
-        // Test the connection
-        await transporter.verify();
+        if (!emailUser || !emailPass) {
+            throw new Error('Missing EMAIL_USER or EMAIL_PASS in environment');
+        }
+
+        // Use explicit Gmail SMTP settings for better reliability in hosted environments.
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            auth: {
+                user: emailUser,
+                pass: emailPass,
+            },
+            connectionTimeout: 20000,
+            greetingTimeout: 15000,
+            socketTimeout: 30000,
+        });
 
         const frontendUrl = process.env.FRONTEND_URL || 'https://chartsignppr.vercel.app';
         const resetUrl = `${frontendUrl}/reset-password/${token}`;
 
         const mailOptions = {
-            from: `Chartsign PPR Team <${process.env.EMAIL_USER}>`,
+            from: `Chartsign PPR Team <${emailUser}>`,
             to: user.email,
             subject: 'Password Reset',
             text: `Hi ${user.name},\n\nYou are receiving this because you (or someone else) have requested the reset of the password for your account. Please click on the following link, or paste this into your browser to complete the process:\n` +
@@ -68,7 +80,11 @@ router.post('/api/forgot', async (req, res) => {
             message: 'Password reset email sent to your email address' 
         });
     } catch (error) {
-        console.error('Password reset error:', error);
+        console.error('Password reset error:', {
+            message: error.message,
+            code: error.code,
+            command: error.command
+        });
         res.status(500).json({ 
             success: false, 
             message: 'Error sending password reset email. Please try again later.', 
