@@ -4,7 +4,7 @@ const User = require('../../models/user');
 
 // Verify token route
 router.get('/api/reset/:token', async (req, res) => {
-    try {
+    try {        
         const user = await User.findOne({
             resetPasswordToken: req.params.token,
             resetPasswordExpires: { $gt: Date.now() } // Check token is not expired

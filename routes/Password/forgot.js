@@ -46,22 +46,9 @@ router.post('/api/forgot', async (req, res) => {
             throw new Error('Missing EMAIL_USER or EMAIL_PASS in environment');
         }
 
-        // Use explicit Gmail SMTP settings for better reliability in hosted environments.
-        const transporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true,
-            auth: {
-                user: emailUser,
-                pass: emailPass,
-            },
-            connectionTimeout: 20000,
-            greetingTimeout: 15000,
-            socketTimeout: 30000,
-        });
-
-        const frontendUrl = process.env.FRONTEND_URL || 'https://chartsignppr.vercel.app';
+        const frontendUrl = process.env.FRONTEND_URL;
         const resetUrl = `${frontendUrl}/reset-password/${token}`;
+        console.log("Reset URL generated:", resetUrl);
 
         const mailOptions = {
             from: `Chartsign PPR Team <${emailUser}>`,
@@ -73,7 +60,47 @@ router.post('/api/forgot', async (req, res) => {
                   `Thank You!\n\nBest Regards,\nChartsign PPR Team`
         };
 
-        await transporter.sendMail(mailOptions);
+        // Some cloud hosts intermittently block one SMTP port.
+        // Try Gmail SMTPS (465) first, then STARTTLS (587) as fallback.
+        const smtpOptionsList = [
+            { port: 465, secure: true },
+            { port: 587, secure: false, requireTLS: true },
+        ];
+
+        let lastMailError;
+        for (const smtpOptions of smtpOptionsList) {
+            try {
+                const transporter = nodemailer.createTransport({
+                    host: 'smtp.gmail.com',
+                    ...smtpOptions,
+                    auth: {
+                        user: emailUser,
+                        pass: emailPass,
+                    },
+                    connectionTimeout: 20000,
+                    greetingTimeout: 15000,
+                    socketTimeout: 30000,
+                    family: 4,
+                });
+
+                await transporter.sendMail(mailOptions);
+                lastMailError = null;
+                break;
+            } catch (mailError) {
+                lastMailError = mailError;
+                console.error('SMTP attempt failed:', {
+                    port: smtpOptions.port,
+                    secure: smtpOptions.secure,
+                    message: mailError.message,
+                    code: mailError.code,
+                    command: mailError.command,
+                });
+            }
+        }
+
+        if (lastMailError) {
+            throw lastMailError;
+        }
 
         res.status(200).json({ 
             success: true, 
