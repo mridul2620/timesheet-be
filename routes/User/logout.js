@@ -17,10 +17,11 @@ router.post('/api/logout', async (req, res) => {
         }
     }
 
+    const isProd = process.env.NODE_ENV === 'production';
     res.clearCookie('refreshToken', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
         path: '/'
     });
     

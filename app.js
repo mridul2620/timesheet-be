@@ -144,7 +144,7 @@ const configureMiddleware = () => {
 
     // CORS
     const corsOptions = {
-        origin: process.env.CORS_ORIGIN || '*',
+        origin: true, // Dynamically reflects request origin to allow cross-site credentials
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
         allowedHeaders: 'Content-Type,Authorization',
         credentials: true

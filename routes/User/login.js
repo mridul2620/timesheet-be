@@ -32,11 +32,12 @@ router.post('/api/login', (req, res, next) => {
                 $push: { refreshTokens: refreshToken }
             });
 
+            const isProd = process.env.NODE_ENV === 'production';
             // Set refresh token in HttpOnly cookie
             res.cookie('refreshToken', refreshToken, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
+                secure: isProd,
+                sameSite: isProd ? 'none' : 'lax',
                 path: '/',
                 maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
             });
