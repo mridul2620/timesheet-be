@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const User = require('../../models/user');
 
-router.post('/api/edituser', async (req, res) => {
+router.post('/api/edituser', authenticateToken, async (req, res) => {
     const { 
         username, 
         newUsername, 

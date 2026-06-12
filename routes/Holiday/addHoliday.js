@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const Holiday = require("../../models/holiday");
 
-router.post("/api/holiday/:username", async (req, res) => {
+router.post("/api/holiday/:username", authenticateToken, async (req, res) => {
     try {
         const { username } = req.params;
         const { email, leaveType, from, to, reason, workingDays } = req.body;

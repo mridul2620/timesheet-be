@@ -1,8 +1,10 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
 
-router.post('/api/sendHolidayEmail', async (req, res) => {
+
+router.post('/api/sendHolidayEmail', authenticateToken, async (req, res) => {
     try {
       // console.log("Holiday email request received:", req.body);
       

@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const User = require('../../models/user');
 
-router.post('/api/changepassword', async (req, res) => {
+router.post('/api/changepassword', authenticateToken, async (req, res) => {
     const { _id, oldPassword, newPassword, confirmPassword } = req.body;
 
     if (newPassword !== confirmPassword) {

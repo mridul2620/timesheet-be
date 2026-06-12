@@ -1,9 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const User = require('../../models/user');
 
-router.post('/api/register', async (req, res) => {
+router.post('/api/register', authenticateToken, async (req, res) => {
     const { username, password, email, name, designation, role, payrate, allocatedHours, remainingHours} = req.body;
+
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ success: false, message: 'Forbidden: Admins only can register users' });
+    }
 
     if (!username || !password || !email || !name || !role) {
         return res.status(400).json({ success: false, message: 'Username, password, email, name, and role are required' });

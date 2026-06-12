@@ -1,8 +1,10 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
 
-router.post('/api/sendUserStatusEmail', async (req, res) => {
+
+router.post('/api/sendUserStatusEmail', authenticateToken, async (req, res) => {
     try {
         // console.log("User status email request received:", req.body);
         

@@ -1,11 +1,16 @@
 const express = require("express");
 const router = express.Router();
+const { authenticateToken } = require("../../middleware/auth");
 const Timesheet = require("../../models/userTimesheet");
 const mongoose = require("mongoose");
 
-router.post("/api/timesheet/submit", async (req, res) => {
+router.post("/api/timesheet/submit", authenticateToken, async (req, res) => {
     try {
         const { username, weekStartDate, entries, workDescription, dayStatus } = req.body;
+
+        if (req.user.username !== username && req.user.role !== "admin") {
+            return res.status(403).json({ message: "Forbidden: You can only submit your own timesheet" });
+        }
 
         // Check for all required fields
         if (!username || !weekStartDate || !entries) {
@@ -71,7 +76,7 @@ router.post("/api/timesheet/submit", async (req, res) => {
     }
 });
 
-router.put("/api/timesheet/update/:id", async (req, res) => {
+router.put("/api/timesheet/update/:id", authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         const { username, entries, workDescription, dayStatus } = req.body;

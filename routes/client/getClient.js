@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const Client = require('../../models/client'); // Ensure correct path
 
 // Get all clients
-router.get('/api/getClients', async (req, res) => {
+router.get('/api/getClients', authenticateToken, async (req, res) => {
     try {
         const clients = await Client.find({});
         res.status(200).json({

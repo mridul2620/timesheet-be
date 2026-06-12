@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const User = require('../../models/user');
 
-router.get('/api/users', async (req, res) => {
+router.get('/api/users', authenticateToken, async (req, res) => {
     try {
         const users = await User.find({}, 'username name email role designation payrate active allocatedHours financialYears remainingHours');
         
@@ -18,7 +20,7 @@ router.get('/api/users', async (req, res) => {
     }
 });
 
-router.get('/api/users/:username', async (req, res) => {
+router.get('/api/users/:username', authenticateToken, async (req, res) => {
     try {
         const { username } = req.params;
         

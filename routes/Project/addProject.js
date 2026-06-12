@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const Project = require('../../models/project');
 
-router.post('/api/addProject', async (req, res) => {
+router.post('/api/addProject', authenticateToken, async (req, res) => {
     const { projectName } = req.body;
 
     if (!projectName) {

@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const Subject = require('../../models/subject');
 
 // Force delete all subjects
-router.delete('/api/deleteAllSubjects', async (req, res) => {
+router.delete('/api/deleteAllSubjects', authenticateToken, async (req, res) => {
     try {
         const result = await Subject.deleteMany({});
         
@@ -31,7 +33,7 @@ router.delete('/api/deleteAllSubjects', async (req, res) => {
 });
 
 // Delete a single subject by ID
-router.delete('/api/deleteSubject/:id', async (req, res) => {
+router.delete('/api/deleteSubject/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         const result = await Subject.findByIdAndDelete(id);

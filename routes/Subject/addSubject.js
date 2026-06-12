@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const Subject = require('../../models/subject');
 
-router.post('/api/addSubject', async (req, res) => {
+router.post('/api/addSubject', authenticateToken, async (req, res) => {
     const { subjectName } = req.body;
 
     if (!subjectName) {

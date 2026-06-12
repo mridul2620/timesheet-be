@@ -1,10 +1,15 @@
 const express = require("express");
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const Timesheet = require("../../models/userTimesheet");
 
-router.delete("/api/timesheet/:username", async (req, res) => {
+router.delete("/api/timesheet/:username", authenticateToken, async (req, res) => {
     try {
       const { username } = req.params;
+      if (req.user.username !== username && req.user.role !== "admin") {
+          return res.status(403).json({ message: "Forbidden: Cannot delete others timesheets" });
+      }
       console.log(`Deleting timesheets for: ${username}`);
   
       const result = await Timesheet.deleteMany({ username });

@@ -1,11 +1,21 @@
 const express = require("express");
 const router = express.Router();
 const Timesheet = require("../../models/userTimesheet");
+const { authenticateToken } = require("../../middleware/auth");
 
-router.get("/api/timesheet/:username", async (req, res) => {
+router.get("/api/timesheet/:username", authenticateToken, async (req, res) => {
     try {
         const { username } = req.params;
         const { weekStart } = req.query;
+
+        // Authorization check: User can only access their own timesheets, Admin can access any
+        if (req.user.username !== username && req.user.role !== 'admin') {
+            return res.status(403).json({ 
+                success: false, 
+                message: "Access denied: You can only view your own timesheets" 
+            });
+        }
+
         let query = { username };
         if (weekStart) {
             query.weekStartDate = weekStart;
@@ -36,10 +46,18 @@ router.get("/api/timesheet/:username", async (req, res) => {
     }
 });
 
-router.post("/api/timesheet/:username/status", async (req, res) => {
+router.post("/api/timesheet/:username/status", authenticateToken, async (req, res) => {
     try {
         const { username } = req.params;
         const { timesheetId, status, rejectionReason } = req.body;
+
+        // Authorization check: Only admins can change timesheet status
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: "Access denied: Only administrators can approve or reject timesheets"
+            });
+        }
 
         if (!timesheetId || !status) {
             return res.status(400).json({

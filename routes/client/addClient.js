@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const Client = require('../../models/client');
 
-router.post('/api/addClient', async (req, res) => {
+router.post('/api/addClient', authenticateToken, async (req, res) => {
     const { clientName } = req.body;
 
     if (!clientName) {

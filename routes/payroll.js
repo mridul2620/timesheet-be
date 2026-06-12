@@ -1,15 +1,21 @@
 // routes/payroll.js
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../middleware/auth');
+
 const PayrollRecord = require('../models/payroll');
 
 /**
  * POST /api/payroll
  * Create a new payroll record or add to existing user's payroll records
  */
-router.post('/api/payroll', async (req, res) => {
+router.post('/api/payroll', authenticateToken, async (req, res) => {
   try {
     const { username, name, timePeriod, payrate, netPay, totalTime, workingDays, status = 'Paid' } = req.body;
+
+    if (req.user.username !== username && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Forbidden: Cannot modify payroll for others' });
+    }
 
     if (!username || !name || !timePeriod || payrate === undefined || netPay === undefined || 
         totalTime === undefined || workingDays === undefined) {
@@ -82,9 +88,12 @@ router.post('/api/payroll', async (req, res) => {
  * PUT /api/payroll/:username/:recordId
  * Update an existing payroll record status
  */
-router.put('/api/payroll/:username/:recordId', async (req, res) => {
+router.put('/api/payroll/:username/:recordId', authenticateToken, async (req, res) => {
   try {
     const { username, recordId } = req.params;
+    if (req.user.username !== username && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Forbidden: Cannot modify payroll for others' });
+    }
     const { status } = req.body;
     
     if (!status) {
@@ -143,9 +152,12 @@ router.put('/api/payroll/:username/:recordId', async (req, res) => {
  * GET /api/payroll/:username
  * Get all payroll records for a specific user
  */
-router.get('/api/payroll/:username', async (req, res) => {
+router.get('/api/payroll/:username', authenticateToken, async (req, res) => {
   try {
     const { username } = req.params;
+    if (req.user.username !== username && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Forbidden: Cannot view payroll for others' });
+    }
     
     const userRecord = await PayrollRecord.findOne({ username });
     

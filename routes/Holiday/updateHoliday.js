@@ -1,9 +1,11 @@
 const express = require("express");
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const Holiday = require("../../models/holiday");
 
 // Update holiday status (enhanced endpoint with rejection reason and email notification)
-router.put("/api/holiday/:id/status", async (req, res) => {
+router.put("/api/holiday/:id/status", authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         const { status, rejectionReason } = req.body;
@@ -95,7 +97,7 @@ router.put("/api/holiday/:id/status", async (req, res) => {
 });
 
 // Update entire holiday request (existing endpoint - no changes needed)
-router.put("/api/holiday/:id", async (req, res) => {
+router.put("/api/holiday/:id", authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         const { leaveType, from, to, reason, workingDays } = req.body;

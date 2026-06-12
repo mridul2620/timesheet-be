@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const Project = require('../../models/project');
 
-router.put('/api/updateProject/:id', async (req, res) => {
+router.put('/api/updateProject/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         const { name, assignedTo } = req.body;

@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const Project = require('../../models/project'); // Ensure correct path
 
 // Force delete all projects
-router.delete('/api/deleteAllProjects', async (req, res) => {
+router.delete('/api/deleteAllProjects', authenticateToken, async (req, res) => {
     try {
         const result = await Project.deleteMany({});
         
@@ -31,7 +33,7 @@ router.delete('/api/deleteAllProjects', async (req, res) => {
 });
 
 // Delete a single project by ID
-router.delete('/api/deleteProject/:id', async (req, res) => {
+router.delete('/api/deleteProject/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         const result = await Project.findByIdAndDelete(id);

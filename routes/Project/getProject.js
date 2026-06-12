@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const Project = require('../../models/project'); // Ensure correct path
 
 // Get all projects
-router.get('/api/getProjects', async (req, res) => {
+router.get('/api/getProjects', authenticateToken, async (req, res) => {
     try {
         const projects = await Project.find({});
         res.status(200).json({

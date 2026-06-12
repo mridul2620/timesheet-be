@@ -2,8 +2,10 @@ const express = require('express');
 const nodemailer = require('nodemailer');
 const moment = require('moment');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
 
-router.post('/api/sendTimesheetEmail', async (req, res) => {
+
+router.post('/api/sendTimesheetEmail', authenticateToken, async (req, res) => {
     try {
       //console.log("Email request received:", req.body);
       

@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const Holiday = require("../../models/holiday");
 
-router.get("/api/holiday", async (req, res) => {
+router.get("/api/holiday", authenticateToken, async (req, res) => {
     try {
         const holidays = await Holiday.find().sort({ createdAt: -1 });
         
@@ -23,7 +25,7 @@ router.get("/api/holiday", async (req, res) => {
     }
 });
 
-router.get("/api/holiday/:username", async (req, res) => {
+router.get("/api/holiday/:username", authenticateToken, async (req, res) => {
     try {
         const { username } = req.params;
         const holidays = await Holiday.find({ username }).sort({ createdAt: -1 });

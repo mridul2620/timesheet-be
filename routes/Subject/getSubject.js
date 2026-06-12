@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const Subject = require('../../models/subject'); // Ensure correct path
 
-router.get('/api/getSubjects', async (req, res) => {
+router.get('/api/getSubjects', authenticateToken, async (req, res) => {
     try {
         const subjects = await Subject.find();
         const subjectList = subjects.map(subject => ({

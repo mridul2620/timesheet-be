@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const Subject = require('../../models/subject');
 
-router.put('/api/updateSubject/:id', async (req, res) => {
+router.put('/api/updateSubject/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         const { name, assignedTo } = req.body;

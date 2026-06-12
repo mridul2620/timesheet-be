@@ -1,11 +1,13 @@
 // routes/api/draftTimesheet.js
 const express = require("express");
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/auth');
+
 const DraftTimesheet = require("../../models/draftTimesheet");
 const mongoose = require("mongoose");
 
 // Save/update a draft entry
-router.post("/api/draft/save", async (req, res) => {
+router.post("/api/draft/save", authenticateToken, async (req, res) => {
     try {
         const { username, weekStartDate, entry, workDescription, dayStatus } = req.body;
 
@@ -74,7 +76,7 @@ router.post("/api/draft/save", async (req, res) => {
     }
 });
 
-router.delete("/api/draft/entry", async (req, res) => {
+router.delete("/api/draft/entry", authenticateToken, async (req, res) => {
     try {
         const { username, weekStartDate, entryId } = req.body;
         
@@ -125,7 +127,7 @@ router.delete("/api/draft/entry", async (req, res) => {
     }
 });
 
-router.get("/api/draft/:username", async (req, res) => {
+router.get("/api/draft/:username", authenticateToken, async (req, res) => {
     try {
         const { username } = req.params;
         const { weekStart } = req.query;
@@ -163,7 +165,7 @@ router.get("/api/draft/:username", async (req, res) => {
     }
 });
 
-router.post("/api/draft/submit/:draftId", async (req, res) => {
+router.post("/api/draft/submit/:draftId", authenticateToken, async (req, res) => {
     try {
         const { draftId } = req.params;
         const { username } = req.body;

@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const flash = require('connect-flash');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const User = require('./models/user');
 
 // Route imports - User
@@ -16,6 +17,8 @@ const registerRoutes = require('./routes/User/register');
 const userRoutes = require('./routes/User/users');
 const deleteUserRoutes = require('./routes/User/deleteUser');
 const editUserRoutes = require('./routes/User/editUser');
+const refreshRoutes = require('./routes/User/refresh');
+const logoutRoutes = require('./routes/User/logout');
 
 // Route imports - Password
 const forgotPasswordRoutes = require('./routes/Password/forgot');
@@ -65,7 +68,7 @@ const app = express();
 
 
 const validateEnv = () => {
-    const required = ['MONGODB_URI', 'SESSION_SECRET'];
+    const required = ['MONGODB_URI', 'SESSION_SECRET', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'];
     const missing = required.filter(key => !process.env[key]);
 
     if (missing.length > 0) {
@@ -104,6 +107,7 @@ const connectDB = async () => {
         await mongoose.connect(process.env.MONGODB_URI, {
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,
+            dbName: 'Chartsign'
         });
 
         return true;
@@ -137,6 +141,9 @@ const configureMiddleware = () => {
     // View engine
     app.set('view engine', 'ejs');
 
+    // Cookies
+    app.use(cookieParser());
+
     // CORS
     const corsOptions = {
         origin: process.env.CORS_ORIGIN || '*',
@@ -150,35 +157,11 @@ const configureMiddleware = () => {
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(bodyParser.json());
 
-    // Session
-    app.use(session({
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 24 * 60 * 60 * 1000 // 24 hours
-        }
-    }));
+    // Session middleware removed: Authentication is now completely stateless via JWT.
 
-    // Flash messages
-    app.use(flash());
-
-    // Passport
+    // Passport (only initialize needed for JWT)
     app.use(passport.initialize());
-    app.use(passport.session());
-
     passport.use(new LocalStrategy(User.authenticate()));
-    passport.serializeUser(User.serializeUser());
-    passport.deserializeUser(User.deserializeUser());
-
-    // Local variables middleware
-    app.use((req, res, next) => {
-        res.locals.currentUser = req.user;
-        res.locals.error = req.flash('error');
-        res.locals.success = req.flash('success');
-        next();
-    });
 
     // Request logging (development)
     if (process.env.NODE_ENV !== 'production') {
@@ -215,6 +198,8 @@ const configureRoutes = () => {
     app.use(userRoutes);
     app.use(deleteUserRoutes);
     app.use(editUserRoutes);
+    app.use(refreshRoutes);
+    app.use(logoutRoutes);
 
     // API Routes - Password Management
     app.use(forgotPasswordRoutes);
@@ -336,13 +321,6 @@ const startServer = async () => {
         console.error('\n✗ Server startup aborted due to database connection failure');
         process.exit(1);
     }
-
-    configureMiddleware();
-
-    configureRoutes();
-
-    configureErrorHandlers();
-
     const PORT = process.env.PORT || 3001;
     app.listen(PORT, () => {
         console.log(`✓ Server running on port ${PORT}`);
@@ -363,7 +341,14 @@ process.on('uncaughtException', (error) => {
     process.exit(1);
 });
 
-// Start the server
-startServer();
+// Always configure middleware and routes
+configureMiddleware();
+configureRoutes();
+configureErrorHandlers();
+
+// Start the server if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+    startServer();
+}
 
 module.exports = app;
