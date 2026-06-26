@@ -51,7 +51,7 @@ router.post('/api/forgot', async (req, res) => {
             throw new Error('Missing FRONTEND_URL in environment — cannot generate reset link');
         }
         const resetUrl = `${frontendUrl}/reset-password/${token}`;
-        console.log("Reset URL generated:", resetUrl);
+        console.log(`Password reset requested for: ${user.email}`);
 
         const mailOptions = {
             from: `Chartsign PPR Team <${emailUser}>`,
