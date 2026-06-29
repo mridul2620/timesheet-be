@@ -2,7 +2,6 @@
 const express = require("express");
 const router = express.Router();
 const { authenticateToken } = require('../../middleware/auth');
-
 const DraftTimesheet = require("../../models/draftTimesheet");
 const mongoose = require("mongoose");
 
@@ -25,14 +24,11 @@ router.post("/api/draft/save", authenticateToken, async (req, res) => {
         });
 
         if (draftTimesheet) {
-
             const entryIndex = draftTimesheet.entries.findIndex(e => e.id === entry.id);
             
             if (entryIndex >= 0) {
-
                 draftTimesheet.entries[entryIndex] = entry;
             } else {
-
                 draftTimesheet.entries.push(entry);
             }
 
@@ -132,29 +128,44 @@ router.get("/api/draft/:username", authenticateToken, async (req, res) => {
         const { username } = req.params;
         const { weekStart } = req.query;
         
-        if (!username || !weekStart) {
+        if (!username) {
             return res.status(400).json({
                 success: false,
-                message: "Username and weekStart are required"
+                message: "Username is required"
             });
         }
         
-        const draftTimesheet = await DraftTimesheet.findOne({
-            username,
-            weekStartDate: weekStart
-        });
-        
-        if (!draftTimesheet) {
-            return res.status(404).json({
+        if (req.user.username !== username && req.user.role !== 'admin') {
+            return res.status(403).json({
                 success: false,
-                message: "No draft found for this week"
+                message: "Access denied: You can only view your own drafts"
             });
         }
         
-        return res.status(200).json({
-            success: true,
-            draft: draftTimesheet
-        });
+        if (weekStart) {
+            const draftTimesheet = await DraftTimesheet.findOne({
+                username,
+                weekStartDate: weekStart
+            });
+            
+            if (!draftTimesheet) {
+                return res.status(404).json({
+                    success: false,
+                    message: "No draft found for this week"
+                });
+            }
+            
+            return res.status(200).json({
+                success: true,
+                draft: draftTimesheet
+            });
+        } else {
+            const drafts = await DraftTimesheet.find({ username }).sort({ lastUpdated: -1 });
+            return res.status(200).json({
+                success: true,
+                drafts
+            });
+        }
     } catch (error) {
         console.error("Error fetching draft:", error);
         return res.status(500).json({

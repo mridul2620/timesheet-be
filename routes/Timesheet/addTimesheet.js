@@ -111,10 +111,10 @@ router.put("/api/timesheet/update/:id", authenticateToken, async (req, res) => {
             });
         }
 
-        if (timesheet.timesheetStatus !== "rejected") {
+        if (timesheet.timesheetStatus === "approved") {
             return res.status(400).json({
                 success: false,
-                message: "Only rejected timesheets can be updated"
+                message: "Approved timesheets cannot be updated"
             });
         }
         
@@ -125,6 +125,8 @@ router.put("/api/timesheet/update/:id", authenticateToken, async (req, res) => {
                 workDescription,
                 dayStatus: dayStatus || {},
                 timesheetStatus: "unapproved",
+                hasBeenUpdated: true,
+                lastUpdatedByEmployeeAt: new Date(),
                 updatedAt: new Date()
             },
             { new: true }

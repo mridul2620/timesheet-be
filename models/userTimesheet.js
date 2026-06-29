@@ -32,6 +32,13 @@ const TimesheetSchema = new mongoose.Schema({
     statusUpdatedAt: {
         type: Date,
         default: Date.now
+    },
+    hasBeenUpdated: {
+        type: Boolean,
+        default: false
+    },
+    lastUpdatedByEmployeeAt: {
+        type: Date
     }
 }, { timestamps: true });
 
