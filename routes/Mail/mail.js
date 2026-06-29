@@ -1,8 +1,8 @@
 const express = require('express');
-const nodemailer = require('nodemailer');
 const moment = require('moment');
 const router = express.Router();
 const { authenticateToken } = require('../../middleware/auth');
+const { sendEmail } = require('../../utils/mailer');
 
 
 router.post('/api/sendTimesheetEmail', authenticateToken, async (req, res) => {
@@ -45,29 +45,6 @@ router.post('/api/sendTimesheetEmail', authenticateToken, async (req, res) => {
       //   pass: process.env.EMAIL_PASS ? 'Set' : 'Missing'
       // });
   
-      // Create nodemailer transporter
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-        debug: true, // Enable debugging
-        logger: true // Log to console
-      });
-      
-      // Test the connection
-      try {
-        await transporter.verify();
-        //console.log("SMTP connection verified successfully");
-      } catch (smtpError) {
-        console.error("SMTP verification failed:", smtpError);
-        return res.status(500).json({ 
-          success: false, 
-          message: 'Email server connection failed',
-          error: smtpError.message
-        });
-      }
   
       // Format dates for email
       const formattedStartDate = new Date(startDate).toLocaleDateString('en-US', {
@@ -126,8 +103,7 @@ router.post('/api/sendTimesheetEmail', authenticateToken, async (req, res) => {
       
       // Send email
       try {
-        const info = await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+        const info = await sendEmail({
           to: userEmail,
           subject: subject,
           html: htmlBody,
