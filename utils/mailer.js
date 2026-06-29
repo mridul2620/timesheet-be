@@ -1,8 +1,5 @@
 const nodemailer = require('nodemailer');
 
-let primaryTransporter = null;
-let fallbackTransporter = null;
-let cachedCredentials = null;
 
 const getCredentials = () => {
     const user = (process.env.EMAIL_USER || '').trim();
@@ -16,69 +13,51 @@ const getCredentials = () => {
     return { user, pass };
 };
 
-const getTransporters = () => {
+const createTransportInstance = (options) => {
     const { user, pass } = getCredentials();
     if (!user || !pass) {
         throw new Error('Email credentials (EMAIL_USER / EMAIL_PASS) are not configured');
     }
 
-    const currentCredsKey = `${user}:${pass}`;
-    if (!primaryTransporter || cachedCredentials !== currentCredsKey) {
-        cachedCredentials = currentCredsKey;
-        
-        // Primary connection on SMTPS (465) with IPv4 forced
-        primaryTransporter = nodemailer.createTransport({
-            service: 'gmail',
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true,
-            family: 4, // Force IPv4 to prevent IPv6 DNS routing failures on Render/cloud providers
-            auth: { user, pass },
-            tls: {
-                rejectUnauthorized: false
-            },
-            connectionTimeout: 20000,
-            greetingTimeout: 15000,
-            socketTimeout: 30000,
-        });
-
-        // Fallback connection on STARTTLS (587)
-        fallbackTransporter = nodemailer.createTransport({
-            service: 'gmail',
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
-            requireTLS: true,
-            family: 4,
-            auth: { user, pass },
-            tls: {
-                rejectUnauthorized: false
-            },
-            connectionTimeout: 20000,
-            greetingTimeout: 15000,
-            socketTimeout: 30000,
-        });
-    }
-
-    return { primaryTransporter, fallbackTransporter };
+    return nodemailer.createTransport({
+        service: 'gmail',
+        ...options,
+        auth: { user, pass },
+        tls: {
+            rejectUnauthorized: false
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
+    });
 };
 
 const sendEmail = async (mailOptions) => {
-    const { primaryTransporter, fallbackTransporter } = getTransporters();
     const { user } = getCredentials();
 
     if (!mailOptions.from) {
         mailOptions.from = `Chartsign PPR Team <${user}>`;
     }
 
+    // Attempt 1: Primary SMTPS (port 465, secure: true)
+    const primaryTransporter = createTransportInstance({ port: 465, secure: true });
     try {
-        return await primaryTransporter.sendMail(mailOptions);
+        const info = await primaryTransporter.sendMail(mailOptions);
+        primaryTransporter.close();
+        return info;
     } catch (primaryError) {
-        console.warn(`[Mailer] Primary SMTP (port 465) attempt failed: ${primaryError.message}. Retrying with fallback (port 587)...`);
+        primaryTransporter.close();
+        console.warn(`[Mailer] Primary SMTP attempt failed: ${primaryError.message}. Retrying with fallback (port 587)...`);
+        
+        // Attempt 2: Fallback STARTTLS (port 587, secure: false)
+        const fallbackTransporter = createTransportInstance({ port: 587, secure: false });
         try {
-            return await fallbackTransporter.sendMail(mailOptions);
+            const info = await fallbackTransporter.sendMail(mailOptions);
+            fallbackTransporter.close();
+            return info;
         } catch (fallbackError) {
-            console.error('[Mailer] Fallback SMTP (port 587) attempt also failed:', fallbackError.message || fallbackError);
+            fallbackTransporter.close();
+            console.error('[Mailer] Fallback SMTP attempt also failed:', fallbackError.message || fallbackError);
             throw fallbackError;
         }
     }
