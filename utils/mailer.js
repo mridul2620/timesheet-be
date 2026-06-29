@@ -26,40 +26,37 @@ const getTransporters = () => {
     if (!primaryTransporter || cachedCredentials !== currentCredsKey) {
         cachedCredentials = currentCredsKey;
         
-        // Primary pooled connection on SMTPS (465)
+        // Primary connection on SMTPS (465) with IPv4 forced
         primaryTransporter = nodemailer.createTransport({
+            service: 'gmail',
             host: 'smtp.gmail.com',
             port: 465,
             secure: true,
-            pool: true,
-            maxConnections: 5,
-            maxMessages: 100,
+            family: 4, // Force IPv4 to prevent IPv6 DNS routing failures on Render/cloud providers
             auth: { user, pass },
             tls: {
-                // Prevents "self-signed certificate in certificate chain" errors
-                // when running behind corporate firewalls, VPNs, or antivirus shields.
                 rejectUnauthorized: false
             },
-            connectionTimeout: 15000,
+            connectionTimeout: 20000,
             greetingTimeout: 15000,
-            socketTimeout: 20000,
+            socketTimeout: 30000,
         });
 
-        // Fallback pooled connection on STARTTLS (587)
+        // Fallback connection on STARTTLS (587)
         fallbackTransporter = nodemailer.createTransport({
+            service: 'gmail',
             host: 'smtp.gmail.com',
             port: 587,
             secure: false,
-            pool: true,
-            maxConnections: 5,
-            maxMessages: 100,
+            requireTLS: true,
+            family: 4,
             auth: { user, pass },
             tls: {
                 rejectUnauthorized: false
             },
-            connectionTimeout: 15000,
+            connectionTimeout: 20000,
             greetingTimeout: 15000,
-            socketTimeout: 20000,
+            socketTimeout: 30000,
         });
     }
 

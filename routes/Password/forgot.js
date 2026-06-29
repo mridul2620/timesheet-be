@@ -33,12 +33,9 @@ router.post('/api/forgot', async (req, res) => {
 
         await user.save();
 
-        const frontendUrl = process.env.FRONTEND_URL;
-        if (!frontendUrl) {
-            throw new Error('Missing FRONTEND_URL in environment — cannot generate reset link');
-        }
+        const frontendUrl = process.env.FRONTEND_URL || req.headers.origin || req.headers.referer?.replace(/\/$/, '') || 'https://timesheet-fe.vercel.app';
         const resetUrl = `${frontendUrl}/reset-password/${token}`;
-        console.log(`Password reset requested for: ${user.email}`);
+        console.log(`Password reset requested for: ${user.email}, resetUrl: ${resetUrl}`);
 
         const mailOptions = {
             to: user.email,
@@ -59,12 +56,13 @@ router.post('/api/forgot', async (req, res) => {
         console.error('Password reset error:', {
             message: error.message,
             code: error.code,
-            command: error.command
+            command: error.command,
+            stack: error.stack
         });
         res.status(500).json({ 
             success: false, 
-            message: 'Error sending password reset email. Please try again later.', 
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            message: error.message || 'Error sending password reset email. Please try again later.',
+            errorDetails: error.message
         });
     }
 });
