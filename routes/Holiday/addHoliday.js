@@ -3,6 +3,8 @@ const router = express.Router();
 const { authenticateToken } = require('../../middleware/auth');
 
 const Holiday = require("../../models/holiday");
+const User = require("../../models/user");
+const { sendHolidayAdminEmail } = require("../Mail/holidayMail");
 
 router.post("/api/holiday/:username", authenticateToken, async (req, res) => {
     try {
@@ -37,10 +39,30 @@ router.post("/api/holiday/:username", authenticateToken, async (req, res) => {
 
         const savedHoliday = await newHoliday.save();
 
+        // Notify the admin about the new request. A mail failure must not fail the request itself.
+        let adminNotified = false;
+        try {
+            const user = await User.findOne({ username }).select("name").lean();
+            await sendHolidayAdminEmail({
+                userEmail: savedHoliday.email,
+                userName: (user && user.name) || savedHoliday.username,
+                leaveType: savedHoliday.leaveType,
+                fromDate: from,
+                toDate: to,
+                workingDays: savedHoliday.workingDays,
+                reason: savedHoliday.reason,
+                status: savedHoliday.status
+            });
+            adminNotified = true;
+        } catch (mailError) {
+            console.error("Failed to send admin notification for holiday request:", mailError);
+        }
+
         res.status(201).json({
             success: true,
             message: "Holiday request created successfully",
-            data: savedHoliday
+            data: savedHoliday,
+            adminNotified
         });
 
     } catch (error) {

@@ -3,6 +3,8 @@ const router = express.Router();
 const { authenticateToken } = require('../../middleware/auth');
 
 const Holiday = require("../../models/holiday");
+const User = require("../../models/user");
+const { sendHolidayAdminEmail } = require("../Mail/holidayMail");
 
 // Update holiday status (enhanced endpoint with rejection reason and email notification)
 router.put("/api/holiday/:id/status", authenticateToken, async (req, res) => {
@@ -182,6 +184,26 @@ router.put("/api/holiday/:id", authenticateToken, async (req, res) => {
             updateData,
             { new: true, runValidators: true }
         );
+
+        // A rejected request that has been edited goes back to pending, so the admin needs to review it again
+        if (existingHoliday.status === 'rejected' && updatedHoliday.status === 'pending') {
+            try {
+                const user = await User.findOne({ username: updatedHoliday.username }).select("name").lean();
+                await sendHolidayAdminEmail({
+                    userEmail: updatedHoliday.email,
+                    userName: (user && user.name) || updatedHoliday.username,
+                    leaveType: updatedHoliday.leaveType,
+                    fromDate: updatedHoliday.from,
+                    toDate: updatedHoliday.to,
+                    workingDays: updatedHoliday.workingDays,
+                    reason: updatedHoliday.reason,
+                    status: updatedHoliday.status,
+                    isResubmission: true
+                });
+            } catch (mailError) {
+                console.error("Failed to send admin notification for resubmitted holiday request:", mailError);
+            }
+        }
 
         res.status(200).json({
             success: true,
